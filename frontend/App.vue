@@ -43,33 +43,44 @@ export default {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text: this.newTodo })
       });
+      if (!res.ok) {
+        return alert("Unable to add todo, please refresh the page");
+      }
       const data = await res.json();
       this.todos.push(data);
       this.newTodo = "";
     },
     async markDone(todo) {
-      todo.done = !todo.done;
       const res = await fetch(`http://localhost:3000/todos/${todo._id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ done: todo.done })
+        body: JSON.stringify({ done: !todo.done })
       });
-      console.log(res);
+      if (!res.ok) {
+        return alert("Unable to update todo, please refresh the page");
+      }
+      const data = await res.json();
+      const i = this.todos.indexOf(todo);
+      // Vue requires that we update the array like this
+      // it doesn't support directly setting an index
+      this.todos.splice(i, 1, data);
     },
     async deleteOne(todo) {
       const res = await fetch(`http://localhost:3000/todos/${todo._id}`, {
         method: "DELETE"
       });
       if (!res.ok) {
-        alert("Unable to delete todo, please refresh the page");
-      } else {
-        const i = this.todos.indexOf(todo);
-        this.todos.splice(i, 1);
+        return alert("Unable to delete todo, please refresh the page");
       }
+      const i = this.todos.indexOf(todo);
+      this.todos.splice(i, 1);
     }
   },
   async mounted() {
     const res = await fetch("http://localhost:3000/todos");
+    if (!res.ok) {
+      return alert("Unable to fetch todos, try again later");
+    }
     const data = await res.json();
     this.todos = data;
   }

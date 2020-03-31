@@ -38,17 +38,19 @@ function loadRoutes(router, collection) {
   });
 
   router.put("/todos/:id", async ctx => {
-    let bodyObject = {};
-    if (ctx.request.body) {
-      bodyObject = { text: ctx.request.body.text, done: ctx.request.body.done };
-    } else {
-      bodyObject = { done: ctx.request.body.done };
+    if (!ctx.request.body.text && typeof ctx.request.body.done !== "boolean") {
+      return (ctx.response.status = 400);
+    }
+    const $set = {};
+    if (ctx.request.body.text) {
+      $set.text = ctx.request.body.text;
+    }
+    if (typeof ctx.request.body.done === "boolean") {
+      $set.done = ctx.request.body.done;
     }
     const result = await collection.findOneAndUpdate(
       { _id: ctx.params.id },
-      {
-        $set: bodyObject
-      },
+      { $set },
       { returnOriginal: false }
     );
     if (result.value) {
